@@ -1,5 +1,6 @@
 import os
-from flask import Flask, request  
+from flask import Flask, request
+import pathlib
 
 ### Unrelated to the exercise -- Starts here -- Please ignore
 app = Flask(__name__)
@@ -17,6 +18,13 @@ class TaxPayer:
         self.prof_picture = None
         self.tax_form_attachment = None
 
+    def _get_valid_path(self, user_path_input):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.normpath(os.path.join(base_dir, user_path_input))
+        if base_dir != os.path.commonpath([base_dir, file_path]):
+            return base_dir
+        return file_path
+
     # returns the path of an optional profile picture that users can set        
     def get_prof_picture(self, path=None):
         # setting a profile picture is optional
@@ -25,14 +33,13 @@ class TaxPayer:
         
         # defends against path traversal attacks
         if path.startswith('/') or path.startswith('..'):
-            return None
+            path = ""
         
-        # builds path
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        prof_picture_path = os.path.normpath(os.path.join(base_dir, path))
-    
-        with open(prof_picture_path, 'rb') as pic:
-            picture = bytearray(pic.read())
+        prof_picture_path = self._get_valid_path(path)
+
+        if pathlib.Path(prof_picture_path).suffix == '.png':
+            with open(prof_picture_path, 'rb') as pic:
+                picture = bytearray(pic.read())
 
         # assume that image is returned on screen after this
         return prof_picture_path
@@ -43,9 +50,12 @@ class TaxPayer:
         
         if not path:
             raise Exception("Error: Tax form is required for all users")
-       
-        with open(path, 'rb') as form:
-            tax_data = bytearray(form.read())
+        
+        form_path = self._get_valid_path(path)
+
+        if pathlib.Path(form_path).suffix == '.pdf':
+            with open(form_path, 'rb') as form:
+                tax_data = bytearray(form.read())
 
         # assume that taxa data is returned on screen after this
-        return path
+        return form_path

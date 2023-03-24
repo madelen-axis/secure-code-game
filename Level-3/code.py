@@ -22,7 +22,7 @@ class TaxPayer:
         base_dir = os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.normpath(os.path.join(base_dir, user_path_input))
         if base_dir != os.path.commonpath([base_dir, file_path]):
-            return base_dir
+            raise Exception("Input path not valid")
         return file_path
 
     # returns the path of an optional profile picture that users can set        
